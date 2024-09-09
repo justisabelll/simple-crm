@@ -20,9 +20,13 @@ export const contacts = mysqlTable('contacts', {
   email: varchar('email', { length: 255 }),
   phone: varchar('phone', { length: 20 }).notNull(),
   status: mysqlEnum('status', ['New', 'In Progress', 'Closed']).default('New'),
+  notes: text('notes'),
+  nextFollowUp: date('next_follow_up'),
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').defaultNow().onUpdateNow(),
 });
+
+export type Contact = typeof contacts.$inferSelect;
 
 export const calls = mysqlTable('calls', {
   id: int('id').primaryKey().autoincrement(),
@@ -34,6 +38,8 @@ export const calls = mysqlTable('calls', {
   notes: text('notes'),
 });
 
+export type Call = typeof calls.$inferSelect;
+
 export const followUps = mysqlTable('follow_ups', {
   id: int('id').primaryKey().autoincrement(),
   contactId: int('contact_id'),
@@ -43,6 +49,8 @@ export const followUps = mysqlTable('follow_ups', {
   ),
   notes: text('notes'),
 });
+
+export type FollowUp = typeof followUps.$inferSelect;
 
 export const contactsRelations = relations(contacts, ({ many }) => ({
   calls: many(calls),
@@ -78,6 +86,8 @@ export const users = mysqlTable('user', {
   image: varchar('image', { length: 255 }),
 });
 
+export type User = typeof users.$inferSelect;
+
 export const accounts = mysqlTable(
   'account',
   {
@@ -104,6 +114,8 @@ export const accounts = mysqlTable(
   })
 );
 
+export type Account = typeof accounts.$inferSelect;
+
 export const sessions = mysqlTable('session', {
   sessionToken: varchar('sessionToken', { length: 255 }).primaryKey(),
   userId: varchar('userId', { length: 255 })
@@ -111,6 +123,8 @@ export const sessions = mysqlTable('session', {
     .references(() => users.id, { onDelete: 'cascade' }),
   expires: timestamp('expires', { mode: 'date' }).notNull(),
 });
+
+export type Session = typeof sessions.$inferSelect;
 
 export const verificationTokens = mysqlTable(
   'verificationToken',
@@ -126,6 +140,7 @@ export const verificationTokens = mysqlTable(
   })
 );
 
+export type VerificationToken = typeof verificationTokens.$inferSelect;
 export const authenticators = mysqlTable(
   'authenticator',
   {
@@ -150,3 +165,5 @@ export const authenticators = mysqlTable(
     }),
   })
 );
+
+export type Authenticator = typeof authenticators.$inferSelect;
