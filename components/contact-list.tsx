@@ -96,8 +96,10 @@ export function ContactList() {
   );
 
   const sortedContacts = [...filteredContacts].sort((a, b) => {
-    if (a[sortColumn] < b[sortColumn]) return sortDirection === 'asc' ? -1 : 1;
-    if (a[sortColumn] > b[sortColumn]) return sortDirection === 'asc' ? 1 : -1;
+    const aValue = a[sortColumn as keyof typeof a];
+    const bValue = b[sortColumn as keyof typeof b];
+    if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
+    if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
     return 0;
   });
 

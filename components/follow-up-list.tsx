@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Check, X, ChevronDown, ChevronUp, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -20,57 +20,31 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
+import type { Contact } from '@/lib/db/schema';
 
-const followUps = [
+const mockFollowUps: Contact[] = [
   {
     id: 1,
     name: 'John Doe',
     company: 'Acme Inc',
     phone: '+1 234 567 890',
-    followUpDate: '2023-06-15',
-    status: 'Pending',
+    status: 'In Progress',
+    email: 'john@example.com',
+    notes: 'Follow up on proposal',
+    nextFollowUp: new Date('2023-06-15'),
+    createdAt: new Date('2023-06-01'),
+    updatedAt: new Date('2023-06-01'),
   },
-  {
-    id: 2,
-    name: 'Jane Smith',
-    company: 'Tech Corp',
-    phone: '+1 987 654 321',
-    followUpDate: '2023-06-18',
-    status: 'Completed',
-  },
-  {
-    id: 3,
-    name: 'Alice Johnson',
-    company: 'Global Systems',
-    phone: '+1 555 123 4567',
-    followUpDate: '2023-06-20',
-    status: 'Pending',
-  },
-  {
-    id: 4,
-    name: 'Bob Williams',
-    company: 'Innovative Solutions',
-    phone: '+1 333 999 8888',
-    followUpDate: '2023-06-22',
-    status: 'Pending',
-  },
-  {
-    id: 5,
-    name: 'Charlie Brown',
-    company: 'Brown Enterprises',
-    phone: '+1 777 888 9999',
-    followUpDate: '2023-06-25',
-    status: 'Rescheduled',
-  },
+  // ... add more mock data with all required fields
 ];
 
 export function FollowUpList() {
-  const [sortColumn, setSortColumn] = useState('followUpDate');
-  const [sortDirection, setSortDirection] = useState('asc');
+  const [sortColumn, setSortColumn] = useState<keyof Contact>('nextFollowUp');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [filter, setFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
 
-  const handleSort = (column: string) => {
+  const handleSort = (column: keyof Contact) => {
     if (column === sortColumn) {
       setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
     } else {
@@ -79,19 +53,25 @@ export function FollowUpList() {
     }
   };
 
-  const filteredFollowUps = followUps.filter(
-    (followUp) =>
-      (filter === 'all' || followUp.status.toLowerCase() === filter) &&
-      Object.values(followUp).some((value) =>
-        value.toString().toLowerCase().includes(searchTerm.toLowerCase())
-      )
-  );
-
-  const sortedFollowUps = [...filteredFollowUps].sort((a, b) => {
-    if (a[sortColumn] < b[sortColumn]) return sortDirection === 'asc' ? -1 : 1;
-    if (a[sortColumn] > b[sortColumn]) return sortDirection === 'asc' ? 1 : -1;
-    return 0;
-  });
+  const filteredAndSortedFollowUps = useMemo(() => {
+    return mockFollowUps
+      .filter((followUp) => {
+        const matchesFilter = filter === 'all' || followUp.status === filter;
+        const matchesSearch = Object.values(followUp).some((value) =>
+          value?.toString().toLowerCase().includes(searchTerm.toLowerCase())
+        );
+        return matchesFilter && matchesSearch;
+      })
+      .sort((a, b) => {
+        const aValue = a[sortColumn];
+        const bValue = b[sortColumn];
+        if (aValue == null) return 1;
+        if (bValue == null) return -1;
+        if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
+        if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
+        return 0;
+      });
+  }, [mockFollowUps, filter, searchTerm, sortColumn, sortDirection]);
 
   return (
     <Card>
@@ -117,9 +97,9 @@ export function FollowUpList() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Statuses</SelectItem>
-                <SelectItem value="pending">Pending</SelectItem>
-                <SelectItem value="completed">Completed</SelectItem>
-                <SelectItem value="rescheduled">Rescheduled</SelectItem>
+                <SelectItem value="New">New</SelectItem>
+                <SelectItem value="In Progress">In Progress</SelectItem>
+                <SelectItem value="Closed">Closed</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -127,12 +107,14 @@ export function FollowUpList() {
         <Table>
           <TableHeader>
             <TableRow>
-              {['Name', 'Company', 'Phone', 'Follow-up Date', 'Status'].map(
+              {['Name', 'Company', 'Phone', 'Next Follow-up', 'Status'].map(
                 (header) => (
                   <TableHead
                     key={header}
                     onClick={() =>
-                      handleSort(header.toLowerCase().replace(' ', ''))
+                      handleSort(
+                        header.toLowerCase().replace(' ', '') as keyof Contact
+                      )
                     }
                   >
                     <div className="flex items-center cursor-pointer">
@@ -151,20 +133,22 @@ export function FollowUpList() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {sortedFollowUps.map((followUp) => (
+            {filteredAndSortedFollowUps.map((followUp) => (
               <TableRow key={followUp.id}>
                 <TableCell className="font-medium">{followUp.name}</TableCell>
                 <TableCell>{followUp.company}</TableCell>
                 <TableCell>{followUp.phone}</TableCell>
-                <TableCell>{followUp.followUpDate}</TableCell>
+                <TableCell>
+                  {followUp.nextFollowUp?.toLocaleDateString()}
+                </TableCell>
                 <TableCell>
                   <span
                     className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                      followUp.status === 'Pending'
+                      followUp.status === 'New'
+                        ? 'bg-blue-100 text-blue-800'
+                        : followUp.status === 'In Progress'
                         ? 'bg-yellow-100 text-yellow-800'
-                        : followUp.status === 'Completed'
-                        ? 'bg-green-100 text-green-800'
-                        : 'bg-blue-100 text-blue-800'
+                        : 'bg-green-100 text-green-800'
                     }`}
                   >
                     {followUp.status}

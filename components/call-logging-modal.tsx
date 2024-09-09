@@ -1,16 +1,36 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import { X, Phone } from 'lucide-react'
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Label } from "@/components/ui/label"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { useState } from 'react';
+import { X, Phone } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import type { Contact } from '@/lib/db/schema';
 
-export function CallLoggingModal({ isOpen, onClose, contact }) {
+export function CallLoggingModal({
+  isOpen,
+  onClose,
+  contact,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  contact: Contact;
+}) {
   const [callData, setCallData] = useState({
     date: new Date().toISOString().split('T')[0],
     time: new Date().toTimeString().split(' ')[0].slice(0, 5),
@@ -19,19 +39,25 @@ export function CallLoggingModal({ isOpen, onClose, contact }) {
     outcome: '',
     status: contact.status,
     nextFollowUp: '',
-  })
+  });
 
-  const handleChange = (e) => {
-    const { name, value } = e.target
-    setCallData(prevData => ({ ...prevData, [name]: value }))
-  }
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value } = e.target;
+    setCallData((prevData) => ({ ...prevData, [name]: value }));
+  };
 
-  const handleSubmit = (e) => {
-    e.preventDefault()
+  const handleSelectChange = (name: string, value: string) => {
+    setCallData((prevData) => ({ ...prevData, [name]: value }));
+  };
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
     // Handle form submission here
-    console.log('Call logged:', callData)
-    onClose()
-  }
+    console.log('Call logged:', callData);
+    onClose();
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -81,17 +107,21 @@ export function CallLoggingModal({ isOpen, onClose, contact }) {
           </div>
           <div className="space-y-2">
             <Label htmlFor="outcome">Call Outcome</Label>
-            <RadioGroup name="outcome" onValueChange={(value) => handleChange({ target: { name: 'outcome', value } })}>
+            <RadioGroup
+              name="outcome"
+              value={callData.outcome}
+              onValueChange={(value) => handleSelectChange('outcome', value)}
+            >
               <div className="flex items-center space-x-2">
-                <RadioGroupItem value="successful" id="successful" />
+                <RadioGroupItem value="Successful" id="successful" />
                 <Label htmlFor="successful">Successful</Label>
               </div>
               <div className="flex items-center space-x-2">
-                <RadioGroupItem value="no-answer" id="no-answer" />
+                <RadioGroupItem value="No Answer" id="no-answer" />
                 <Label htmlFor="no-answer">No Answer</Label>
               </div>
               <div className="flex items-center space-x-2">
-                <RadioGroupItem value="voicemail" id="voicemail" />
+                <RadioGroupItem value="Left Voicemail" id="voicemail" />
                 <Label htmlFor="voicemail">Left Voicemail</Label>
               </div>
             </RadioGroup>
@@ -109,14 +139,18 @@ export function CallLoggingModal({ isOpen, onClose, contact }) {
           </div>
           <div className="space-y-2">
             <Label htmlFor="status">Update Lead Status</Label>
-            <Select name="status" onValueChange={(value) => handleChange({ target: { name: 'status', value } })}>
+            <Select
+              name="status"
+              value={callData.status || ''}
+              onValueChange={(value) => handleSelectChange('status', value)}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Select status" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="new">New</SelectItem>
-                <SelectItem value="in-progress">In Progress</SelectItem>
-                <SelectItem value="closed">Closed</SelectItem>
+                <SelectItem value="New">New</SelectItem>
+                <SelectItem value="In Progress">In Progress</SelectItem>
+                <SelectItem value="Closed">Closed</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -131,11 +165,13 @@ export function CallLoggingModal({ isOpen, onClose, contact }) {
             />
           </div>
           <div className="flex justify-end space-x-4">
-            <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
+            <Button type="button" variant="outline" onClick={onClose}>
+              Cancel
+            </Button>
             <Button type="submit">Save</Button>
           </div>
         </form>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

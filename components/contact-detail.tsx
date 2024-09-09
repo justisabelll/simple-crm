@@ -14,12 +14,19 @@ import {
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import type { Contact } from '@/lib/db/schema';
 
-export function ContactDetail({ contact = {} }) {
-  const [formData, setFormData] = useState(contact);
+export function ContactDetail({ contact }: { contact: Partial<Contact> }) {
+  const [formData, setFormData] = useState<Partial<Contact>>(contact);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
     const { name, value } = e.target;
+    setFormData((prevData) => ({ ...prevData, [name]: value }));
+  };
+
+  const handleSelectChange = (name: string, value: string) => {
     setFormData((prevData) => ({ ...prevData, [name]: value }));
   };
 
@@ -92,17 +99,18 @@ export function ContactDetail({ contact = {} }) {
                   <Label htmlFor="status">Lead Status</Label>
                   <Select
                     name="status"
+                    value={formData.status || ''}
                     onValueChange={(value) =>
-                      handleChange({ target: { name: 'status', value } })
+                      handleSelectChange('status', value)
                     }
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Select status" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="new">New</SelectItem>
-                      <SelectItem value="in-progress">In Progress</SelectItem>
-                      <SelectItem value="closed">Closed</SelectItem>
+                      <SelectItem value="New">New</SelectItem>
+                      <SelectItem value="In Progress">In Progress</SelectItem>
+                      <SelectItem value="Closed">Closed</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -126,7 +134,9 @@ export function ContactDetail({ contact = {} }) {
                     id="nextFollowUp"
                     name="nextFollowUp"
                     type="date"
-                    value={formData.nextFollowUp || ''}
+                    value={
+                      formData.nextFollowUp?.toISOString().split('T')[0] || ''
+                    }
                     onChange={handleChange}
                   />
                 </div>
